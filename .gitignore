@@ -1,3 +1,21 @@
+# Ignore MacOS-specific files
+.DS_Store
+
+# Ignore IDE-specific directory
+*.iml
+.idea
+.idea/*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+local.properties
+
+# Ignore Gradle build output directory
+build
+/captures
+.externalNativeBuild
+/.gitattributes
+
 # Compiled class file
 *.class
 

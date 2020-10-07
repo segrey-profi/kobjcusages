@@ -1,0 +1,6 @@
+# Absolute path to root (working) directory of the script
+root.dir=/path/to/working/directory
+# Target directories separated by ":", relative to {root.dir}
+target.dirs=Classes/MyObjcModule/:Classes/OtherObjcModule
+# Exclude directories separated by ":", relative to {root.dir}
+exclude.dirs=Resources/Fonts:Resources/Images.xcassets
