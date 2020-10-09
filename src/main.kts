@@ -1,5 +1,5 @@
 import java.io.File
-import java.util.*
+import java.util.Properties
 
 class Dependency(val name: String, usage: String) : Comparable<Dependency> {
     val usages = mutableSetOf(usage)
@@ -63,7 +63,7 @@ fun readProps(): Triple<String, List<String>, List<String>> {
         ?.filter { it.isNotBlank() }
         ?.map { it.trim() } ?: emptyList()
 
-    val targetPaths = readList("target.dirs")
+    val targetPaths = readList("target.dirs").sorted()
     if (targetPaths.isEmpty()) error("No target directories provided")
 
     val excludePaths = readList("exclude.dirs")
@@ -161,23 +161,66 @@ do {
 } while (hasLocalDependencies)
 
 Progress.reset()
-println("")
-println("SOURCES:")
-for (def in sources.values.filter { it.usages.isNotEmpty() }.sortedBy { it.name }) {
-    println(" ")
-    println(def.name)
-    println(" Contained in:")
-    def.files.forEach { println("  $it") }
-    println(" Used in:")
-    def.usages.forEach { println("  $it") }
+
+val unusedDirs = mutableListOf<String>().apply { addAll(targetDirs) }
+val sourcesByUsage = sources.values.groupBy { it.usages.isNotEmpty() }
+
+sourcesByUsage[true]?.sortedBy { it.name }?.let { usableSources ->
+    println()
+    println("USABLE SOURCES:")
+    for (def in usableSources) {
+        println()
+        println(def.name)
+        println(" Contained in:")
+        for (path in def.files.sorted()) {
+            println("  $path")
+            unusedDirs.removeAll { path.startsWith(it) }
+        }
+        println(" Used in:")
+        def.usages.sorted().forEach { println("  $it") }
+    }
+} ?: println("NO USABLE SOURCES")
+
+val unusedSources = sourcesByUsage[false]?.filter { src ->
+    unusedDirs.none { dir -> src.files.any { it.startsWith(dir) } }
+}?.sortedBy { it.name } ?: emptyList()
+
+if (unusedSources.isNotEmpty() || unusedDirs.isNotEmpty()) {
+    println()
+    println("UNUSED SOURCES:")
+    for (dir in unusedDirs) {
+        println()
+        println(dir)
+    }
+    for (def in unusedSources) {
+        println()
+        println(def.name)
+        println(" Contained in:")
+        for (path in def.files.sorted()) {
+            println("  $path")
+        }
+    }
 }
 
-// TODO unused dependencies = dependencies - externalDependencies
+val unusedDependencies = dependencies.filter {
+    !externalDependencies.containsKey(it.key) && !sources.containsKey(it.key)
+}
+if (unusedDependencies.isNotEmpty()) {
+    println()
+    println("UNUSED DEPENDENCIES:")
+    for ((name, dep) in unusedDependencies.toSortedMap()) {
+        println()
+        println("$name was used in:")
+        dep.usages.forEach { println("  $it") }
+    }
+}
 
-println("")
-println("DEPENDENCIES:")
-for ((name, dep) in externalDependencies.toSortedMap()) {
-    println(" ")
-    println("$name used in:")
-    dep.usages.forEach { println("  $it") }
+if (externalDependencies.isNotEmpty()) {
+    println()
+    println("USABLE DEPENDENCIES:")
+    for ((name, dep) in externalDependencies.toSortedMap()) {
+        println()
+        println("$name used in:")
+        dep.usages.forEach { println("  $it") }
+    }
 }

@@ -10,7 +10,7 @@ object Parser {
     private val regexMatchers = arrayListOf(
         MatchType.IMPORT to Regex("#import(\\s+)?[\"<]([^\">]+)[\">]"),
         MatchType.FORWARD to Regex("[@](class|protocol)\\s+([^;]+);"),
-        MatchType.DEFINITION to Regex("[@](interface|protocol)\\s+(\\w+)")
+        MatchType.DEFINITION to Regex("[@](interface|protocol)\\s+(\\w+(\\s+[(][^)]+[)])?)")
     )
 
     private val excludeImports = arrayOf(
