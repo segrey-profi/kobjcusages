@@ -124,7 +124,7 @@ object UsageFinder {
                 MatchType.IMPORT, MatchType.FORWARD -> dependencies[match.text] =
                     dependencies[match.text]?.apply { usages.add(filePath) }
                         ?: Dependency(match.text, filePath)
-                MatchType.DEFINITION -> sources[match.text] =
+                MatchType.DEFINITION -> if (!isImplementation) sources[match.text] =
                     sources[match.text]?.apply { files.add(filePath) }
                         ?: Definition(match.text, filePath)
                 MatchType.NONE -> Unit
