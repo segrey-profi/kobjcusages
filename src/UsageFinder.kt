@@ -40,7 +40,7 @@ object UsageFinder {
         val unusedDirs = mutableListOf<String>().apply { addAll(config.targetPaths) }
         val sourcesByUsage = sources.values.groupBy { it.usages.isNotEmpty() }
 
-        sourcesByUsage[true]?.sortedBy { it.name }?.let { usableSources ->
+        sourcesByUsage[true]?.sorted()?.let { usableSources ->
             println()
             println("USABLE SOURCES:")
             for (def in usableSources) {
@@ -58,11 +58,11 @@ object UsageFinder {
 
         val unusedSources = sourcesByUsage[false]?.filter { src ->
             unusedDirs.none { dir -> src.files.any { it.startsWith(dir) } }
-        }?.sortedBy { it.name } ?: emptyList()
+        }?.sorted() ?: emptyList()
 
         if (unusedSources.isNotEmpty() || unusedDirs.isNotEmpty()) {
             println()
-            println("UNUSED SOURCES:")
+            println("MAYBE UNUSED SOURCES:")
             for (dir in unusedDirs) {
                 println()
                 println(dir)
@@ -82,7 +82,7 @@ object UsageFinder {
         }
         if (unusedDependencies.isNotEmpty()) {
             println()
-            println("UNUSED DEPENDENCIES:")
+            println("MAYBE UNUSED DEPENDENCIES:")
             for ((name, dep) in unusedDependencies.toSortedMap()) {
                 println()
                 println("$name was used in:")
@@ -119,12 +119,12 @@ object UsageFinder {
         sources[file.name] = sources[file.name]?.apply { files.add(filePath) }
             ?: Definition(file.name, filePath)
 
-        for (match in Parser.parse(file, ignored = MatchType.NONE)) {
+        Parser.parse(file, ignored = MatchType.NONE) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD -> dependencies[match.text] =
                     dependencies[match.text]?.apply { usages.add(filePath) }
                         ?: Dependency(match.text, filePath)
-                MatchType.DEFINITION -> sources[file.name] =
+                MatchType.DEFINITION -> sources[match.text] =
                     sources[match.text]?.apply { files.add(filePath) }
                         ?: Definition(match.text, filePath)
                 MatchType.NONE -> Unit
@@ -139,7 +139,7 @@ object UsageFinder {
     ) {
         ProgressWriter.step()
         val filePath = file.toRelativeString(rootDir)
-        for (match in Parser.parse(file, ignored = MatchType.DEFINITION)) {
+        Parser.parse(file, ignored = MatchType.DEFINITION) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD ->
                     if (sources.containsKey(match.text)) {

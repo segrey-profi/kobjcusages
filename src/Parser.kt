@@ -19,14 +19,12 @@ object Parser {
         "profi-Swift.h"
     )
 
-    fun parse(file: File, ignored: MatchType): List<LineMatch> {
-        val matches = mutableListOf<LineMatch>()
+    fun parse(file: File, ignored: MatchType, callback: (LineMatch) -> Unit) {
         file.forEachLine { line ->
             parseLine(line.trim(), ignored)
                 ?.takeIf { it.type != MatchType.IMPORT || !excludeImports.contains(it.text) }
-                ?.let { matches.add(it) }
+                ?.let(callback)
         }
-        return matches
     }
 
     private fun parseLine(line: String, ignored: MatchType): LineMatch? {
