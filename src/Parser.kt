@@ -6,17 +6,11 @@ enum class MatchType {
 
 class LineMatch(val type: MatchType, val text: String)
 
-object Parser {
+class Parser(private val excludeImports: List<String>) {
     private val regexMatchers = arrayListOf(
         MatchType.IMPORT to Regex("#import(\\s+)?[\"<]([^\">]+)[\">]"),
         MatchType.FORWARD to Regex("[@](class|protocol)\\s+([^;]+);"),
         MatchType.DEFINITION to Regex("[@](interface|protocol)\\s+(\\w+(\\s+[(][^)]+[)])?)")
-    )
-
-    private val excludeImports = arrayOf(
-        "UIKit/UIKit.h",
-        "Foundation/Foundation.h",
-        "profi-Swift.h"
     )
 
     fun parse(file: File, ignored: MatchType, callback: (LineMatch) -> Unit) {

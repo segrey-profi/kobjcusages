@@ -8,10 +8,12 @@ object UsageFinder {
     private val dependencies = mutableMapOf<String, Dependency>()
 
     private lateinit var rootDir: File
+    private lateinit var parser: Parser
 
     fun run() {
         val config = readConfig()
         rootDir = File(config.rootPath)
+        parser = Parser(config.excludeImports)
 
         for (path in config.targetPaths) {
             ProgressWriter.reset()
@@ -119,7 +121,7 @@ object UsageFinder {
         sources[file.name] = sources[file.name]?.apply { files.add(filePath) }
             ?: Definition(file.name, filePath)
 
-        Parser.parse(file, ignored = MatchType.NONE) { match ->
+        parser.parse(file, ignored = MatchType.NONE) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD -> dependencies[match.text] =
                     dependencies[match.text]?.apply { usages.add(filePath) }
@@ -139,7 +141,7 @@ object UsageFinder {
     ) {
         ProgressWriter.step()
         val filePath = file.toRelativeString(rootDir)
-        Parser.parse(file, ignored = MatchType.DEFINITION) { match ->
+        parser.parse(file, ignored = MatchType.DEFINITION) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD ->
                     if (sources.containsKey(match.text)) {

@@ -4,3 +4,5 @@ root.dir=/path/to/working/directory
 target.dirs=Classes/MyObjcModule/:Classes/OtherObjcModule
 # Exclude directories separated by ":", relative to {root.dir}
 exclude.dirs=Resources/Fonts:Resources/Images.xcassets
+# Exclude `#import` headers, comma separated
+exclude.imports=UIKit/UIKit.h,Foundation/Foundation.h,profi-Swift.h
