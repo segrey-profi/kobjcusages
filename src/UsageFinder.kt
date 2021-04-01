@@ -103,9 +103,13 @@ object UsageFinder {
         }
     }
 
-    private fun readConfig(): Config {
+    fun readConfig(): Config {
+        val propsFileName = "local.properties"
+        val userDir = File(System.getProperty("user.dir"))
+        var propsFile = File(userDir, propsFileName)
+        if (!propsFile.exists()) propsFile = File(userDir.parent, propsFileName)
+
         val properties = Properties()
-        val propsFile = File(System.getProperty("user.dir"), "local.properties")
         propsFile.reader().use { properties.load(it) }
 
         return Config(properties)
