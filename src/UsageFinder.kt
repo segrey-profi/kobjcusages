@@ -23,7 +23,7 @@ object UsageFinder {
 
         ProgressWriter.reset()
         println("Sources found: ${sources.size}")
-        println("Dependenices found: ${dependencies.size}")
+        println("Dependencies found: ${dependencies.size}")
 
         val sourceDefinitions = sources.values
         val externalDependencies = mutableMapOf<String, Dependency>()
@@ -35,7 +35,7 @@ object UsageFinder {
             processDependency(file, sourceDefinitions, externalDependencies)
         }
 
-        checkLocalDependenices()
+        checkLocalDependencies()
 
         ProgressWriter.reset()
 
@@ -163,11 +163,11 @@ object UsageFinder {
         }
     }
 
-    private fun checkLocalDependenices() {
+    private fun checkLocalDependencies() {
         var hasLocalDependencies: Boolean
         do {
             ProgressWriter.reset()
-            println("Checking for local dependenices...")
+            println("Checking for local dependencies...")
             hasLocalDependencies = false
             for ((name, def) in sources) {
                 ProgressWriter.step()
