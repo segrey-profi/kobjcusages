@@ -3,12 +3,16 @@ import java.util.Properties
 
 object UsageFinder {
 
+    private val swiftDefinitionDelimiter = Regex("[^A-Za-z]+")
+    private val swiftDefinitionRegex = Regex("[A-Z][A-Za-z]+")
+
     private val fileVisitor = FileVisitor()
     private val sources = mutableMapOf<String, Definition>()
     private val dependencies = mutableMapOf<String, Dependency>()
 
     private lateinit var rootDir: File
     private lateinit var parser: Parser
+    private lateinit var swiftExcludes: List<String>
 
     fun run() {
         val config = readConfig()
@@ -33,6 +37,7 @@ object UsageFinder {
     private fun findCode(config: Config) {
         rootDir = File(config.rootPath)
         parser = Parser(config.excludeImports)
+        swiftExcludes = config.excludeSwiftDefinitions
 
         for (path in config.targetPaths) {
             ProgressWriter.reset()
@@ -126,22 +131,39 @@ object UsageFinder {
         ProgressWriter.step()
         val isImplementation = file.name.endsWith(".m")
         val isObjC = isImplementation || file.name.endsWith(".h")
-        if (!isObjC) return
+        val isSwift = file.name.endsWith(".swift")
+        if (!isObjC && !isSwift) return
 
         val filePath = file.toRelativeString(rootDir)
         sources[file.name] = sources[file.name]?.apply { files.add(filePath) }
             ?: Definition(file.name, filePath)
 
-        parser.parse(file, ignored = MatchType.NONE) { match ->
+        parser.parse(file, ignored = if (isSwift) emptySet() else setOf(MatchType.NONE)) { match ->
             when (match.type) {
-                MatchType.IMPORT, MatchType.FORWARD -> dependencies[match.text] =
-                    dependencies[match.text]?.apply { usages.add(filePath) }
-                        ?: Dependency(match.text, filePath)
-                MatchType.DEFINITION -> if (!isImplementation) sources[match.text] =
-                    sources[match.text]?.apply { files.add(filePath) }
-                        ?: Definition(match.text, filePath)
-                MatchType.NONE -> Unit
+                MatchType.IMPORT, MatchType.FORWARD -> addDependencyUsage(match.text, filePath)
+                MatchType.DEFINITION -> if (!isImplementation) addSourceFile(match.text, filePath)
+                MatchType.SWIFT -> if (isSwift) addSourceFile(match.text, filePath)
+                MatchType.NONE -> match.text.takeIf { isSwift }?.let { line ->
+                    line.split(regex = swiftDefinitionDelimiter)
+                            .filter { swiftDefinitionRegex.matches(it) && !isSwiftExcluded(it) }
+                            .forEach { addDependencyUsage(it, filePath) }
+                } ?: Unit
             }
+        }
+    }
+
+    private fun addDependencyUsage(name: String, path: String) {
+        dependencies[name] = dependencies[name]?.apply { usages.add(name) } ?: Dependency(name, path)
+    }
+
+    private fun addSourceFile(name: String, path: String) {
+        sources[name] = sources[name]?.apply { files.add(path) } ?: Definition(name, path)
+    }
+
+    private fun isSwiftExcluded(name: String): Boolean = swiftExcludes.any {
+        when {
+            it.endsWith("*") -> name.startsWith(it.substring(0, it.length - 1))
+            else -> name == it
         }
     }
 
@@ -152,7 +174,7 @@ object UsageFinder {
     ) {
         ProgressWriter.step()
         val filePath = file.toRelativeString(rootDir)
-        parser.parse(file, ignored = MatchType.DEFINITION) { match ->
+        parser.parse(file, ignored = setOf(MatchType.DEFINITION, MatchType.SWIFT)) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD ->
                     if (sources.containsKey(match.text)) {
@@ -165,7 +187,7 @@ object UsageFinder {
                 MatchType.NONE -> for (def in sourceDefinitions) {
                     if (def.regex.containsMatchIn(match.text)) def.usages.add(filePath)
                 }
-                MatchType.DEFINITION -> Unit
+                MatchType.DEFINITION, MatchType.SWIFT -> Unit
             }
         }
     }

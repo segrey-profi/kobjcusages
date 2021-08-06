@@ -1,5 +1,5 @@
 # Search mode: "code" = find code usages (default) or "images" = find image assets usages
-# search.mode=code
+#search.mode=code
 # Absolute path to root (working) directory of the script
 root.dir=/path/to/working/directory
 # Target directories separated by ":", relative to {root.dir}
@@ -8,3 +8,5 @@ target.dirs=Classes/MyObjcModule/:Classes/OtherObjcModule
 exclude.dirs=Resources/Fonts:Resources/Images.xcassets
 # Exclude `#import` headers, comma separated
 exclude.imports=UIKit/UIKit.h,Foundation/Foundation.h
+# Exclude definition usages in Swift, comma separated. Finish with "*" for prefixes, e.g. NS*,UI*
+exclude.swift=CG*,CA*,NS*,UI*,Bool,Int,Double,Float,String,Array,Set,Dictionary,Range,URL,Timer,Date,Calendar,TimeInterval,DispatchGroup,DispatchQueue,DispatchWorkItem,IBAction,IBOutlet,Void,Error

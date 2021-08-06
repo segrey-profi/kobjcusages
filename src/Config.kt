@@ -23,6 +23,8 @@ class Config(properties: Properties) {
 
     val excludeImports: List<String> = properties.getList("exclude.imports", separator = ",")
 
+    val excludeSwiftDefinitions: List<String> = properties.getList("exclude.swift", separator = ",")
+
     private fun Properties.getList(key: String, separator: String = ":"): List<String> =
         (this[key] as? String)
             ?.split(separator)
