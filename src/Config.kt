@@ -2,6 +2,14 @@ import java.util.Properties
 
 class Config(properties: Properties) {
 
+    enum class Mode {
+        CODE, IMAGES
+    }
+
+    val mode: Mode = (properties["search.mode"] as? String)
+        ?.let { Mode.valueOf(it.uppercase()) }
+        ?: Mode.CODE
+
     val rootPath: String = (properties["root.dir"] as? String)?.takeIf { it.isNotBlank() }
         ?: error("No root directory provided")
 

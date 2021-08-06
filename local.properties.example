@@ -1,3 +1,5 @@
+# Search mode: "code" = find code usages (default) or "images" = find image assets usages
+# search.mode=code
 # Absolute path to root (working) directory of the script
 root.dir=/path/to/working/directory
 # Target directories separated by ":", relative to {root.dir}

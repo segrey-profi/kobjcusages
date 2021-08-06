@@ -12,6 +12,25 @@ object UsageFinder {
 
     fun run() {
         val config = readConfig()
+        when (config.mode) {
+            Config.Mode.CODE -> findCode(config)
+            Config.Mode.IMAGES -> ImageFinder(config, fileVisitor).run()
+        }
+    }
+
+    private fun readConfig(): Config {
+        val propsFileName = "local.properties"
+        val userDir = File(System.getProperty("user.dir"))
+        var propsFile = File(userDir, propsFileName)
+        if (!propsFile.exists()) propsFile = File(userDir.parent, propsFileName)
+
+        val properties = Properties()
+        propsFile.reader().use { properties.load(it) }
+
+        return Config(properties)
+    }
+
+    private fun findCode(config: Config) {
         rootDir = File(config.rootPath)
         parser = Parser(config.excludeImports)
 
@@ -101,18 +120,6 @@ object UsageFinder {
                 dep.usages.forEach { println("  $it") }
             }
         }
-    }
-
-    fun readConfig(): Config {
-        val propsFileName = "local.properties"
-        val userDir = File(System.getProperty("user.dir"))
-        var propsFile = File(userDir, propsFileName)
-        if (!propsFile.exists()) propsFile = File(userDir.parent, propsFileName)
-
-        val properties = Properties()
-        propsFile.reader().use { properties.load(it) }
-
-        return Config(properties)
     }
 
     private fun processSource(file: File) {
