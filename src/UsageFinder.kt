@@ -14,7 +14,8 @@ object UsageFinder {
     private lateinit var parser: Parser
     private lateinit var swiftExcludes: List<String>
 
-    fun run() {
+    @JvmStatic
+    fun main(args: Array<String> = emptyArray()) {
         val config = readConfig()
         when (config.mode) {
             Config.Mode.CODE -> findCode(config)

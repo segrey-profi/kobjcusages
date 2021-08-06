@@ -1,2 +1,2 @@
 
-UsageFinder.run()
+UsageFinder.main()
