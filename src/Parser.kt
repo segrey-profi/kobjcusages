@@ -15,8 +15,28 @@ class Parser(private val excludeImports: List<String>) {
     )
 
     fun parse(file: File, ignored: Set<MatchType>, callback: (LineMatch) -> Unit) {
-        file.forEachLine { line ->
-            parseLine(line.trim(), ignored)
+        var isComment = false
+        file.forEachLine { lineString ->
+            val line = lineString.trim()
+            var normalizedLine = ""
+            when {
+                line == COMMENT_LINE || line.startsWith(COMMENT_LINE) -> Unit
+                line == COMMENT_PREFIX || line.startsWith(COMMENT_PREFIX) -> isComment = true
+                line == COMMENT_SUFFIX -> isComment = false
+                !isComment && line.endsWith(COMMENT_PREFIX) -> {
+                    normalizedLine = line.removeSuffix(COMMENT_PREFIX).trim()
+                    isComment = true
+                }
+                isComment && line.contains(COMMENT_SUFFIX) -> {
+                    isComment = false
+                    val index = line.indexOf(COMMENT_SUFFIX) + COMMENT_SUFFIX.length
+                    if (index < line.length) normalizedLine = line.substring(index).trim()
+                }
+                isComment -> Unit
+                else -> normalizedLine = line
+            }
+            normalizedLine.takeIf { it.isNotEmpty() }
+                ?.let { parseLine(it, ignored) }
                 ?.takeIf { isValidMatch(it, line) }
                 ?.let(callback)
         }
@@ -32,12 +52,16 @@ class Parser(private val excludeImports: List<String>) {
     }
 
     private fun isValidMatch(match: LineMatch, line: String): Boolean = when (match.type) {
-        MatchType.SWIFT -> !line.contains(PRIVATE_PREFIX) || line.indexOf(PRIVATE_PREFIX) > line.indexOf(match.text)
+        MatchType.SWIFT -> !line.contains(PRIVATE_PREFIX)
+            || line.indexOf(PRIVATE_PREFIX) > line.indexOf(match.text)
         MatchType.IMPORT -> !excludeImports.contains(match.text)
         else -> true
     }
 
     companion object {
+        const val COMMENT_LINE = "//"
+        const val COMMENT_PREFIX = "/*"
+        const val COMMENT_SUFFIX = "*/"
         const val PRIVATE_PREFIX = "private "
     }
 }
