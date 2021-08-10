@@ -3,8 +3,9 @@ import java.util.Properties
 
 object UsageFinder {
 
-    private val swiftDefinitionDelimiter = Regex("[^A-Za-z]+")
+    private val swiftDefinitionDelimiter = Regex("[^\"A-Za-z]+")
     private val swiftDefinitionRegex = Regex("[A-Z][A-Za-z]+")
+    private val ignoredDependencies = setOf(MatchType.DEFINITION, MatchType.SWIFT)
 
     private val fileVisitor = FileVisitor()
     private val sources = mutableMapOf<String, Definition>()
@@ -132,14 +133,15 @@ object UsageFinder {
         ProgressWriter.step()
         val isImplementation = file.name.endsWith(".m")
         val isObjC = isImplementation || file.name.endsWith(".h")
-        val isSwift = file.name.endsWith(".swift")
+        val isSwift = file.isSwift()
         if (!isObjC && !isSwift) return
 
         val filePath = file.toRelativeString(rootDir)
         sources[file.name] = sources[file.name]?.apply { files.add(filePath) }
             ?: Definition(file.name, filePath)
 
-        parser.parse(file, ignored = if (isSwift) emptySet() else setOf(MatchType.NONE)) { match ->
+        val ignoredTypes = if (isSwift) emptySet() else setOf(MatchType.NONE)
+        parser.parse(file, ignoredTypes, isSwift) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD -> addDependencyUsage(match.text, filePath)
                 MatchType.DEFINITION -> if (!isImplementation) addSourceFile(match.text, filePath)
@@ -175,7 +177,7 @@ object UsageFinder {
     ) {
         ProgressWriter.step()
         val filePath = file.toRelativeString(rootDir)
-        parser.parse(file, ignored = setOf(MatchType.DEFINITION, MatchType.SWIFT)) { match ->
+        parser.parse(file, ignoredDependencies, file.isSwift()) { match ->
             when (match.type) {
                 MatchType.IMPORT, MatchType.FORWARD ->
                     if (sources.containsKey(match.text)) {
@@ -230,4 +232,5 @@ object UsageFinder {
         }
     }
 
+    private fun File.isSwift(): Boolean = name.endsWith(".swift")
 }
