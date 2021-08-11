@@ -188,7 +188,7 @@ object UsageFinder {
                                 ?: Dependency(match.text, filePath)
                     }
                 MatchType.NONE -> for (def in sourceDefinitions) {
-                    if (def.regex.containsMatchIn(match.text)) def.usages.add(filePath)
+                    if (def.hasMatches(match.text)) def.usages.add(filePath)
                 }
                 MatchType.DEFINITION, MatchType.SWIFT -> Unit
             }
