@@ -9,4 +9,4 @@ exclude.dirs=Resources/Fonts:Resources/Images.xcassets
 # Exclude `#import` headers, comma separated
 exclude.imports=UIKit/UIKit.h,Foundation/Foundation.h
 # Exclude definition usages in Swift, comma separated. Finish with "*" for prefixes, e.g. NS*,UI*
-exclude.swift=CG*,CA*,NS*,UI*,Bool,Int,Double,Float,String,Array,Set,Dictionary,Range,URL,Timer,Date,Calendar,TimeInterval,DispatchGroup,DispatchQueue,DispatchWorkItem,IBAction,IBOutlet,Void,Error
+exclude.swift=CG*,CA*,NS*,UI*,Bool,Int,Double,Float,String,Array,Set,Dictionary,Range,URL,Timer,Date,Calendar,TimeInterval,DispatchGroup,DispatchQueue,DispatchWorkItem,IBAction,IBOutlet,Void,Error,Never,Self,Any,AnyObject,AnyClass
