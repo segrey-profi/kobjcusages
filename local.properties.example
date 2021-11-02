@@ -2,8 +2,9 @@
 #search.mode=code
 # Absolute path to root (working) directory of the script
 root.dir=/path/to/working/directory
-# Target directories separated by ":", relative to {root.dir}
-target.dirs=Classes/MyObjcModule/:Classes/OtherObjcModule
+# Target directories separated by ":", relative to {root.dir}.
+# Add /* suffix to target only subdirectories instead of directory itself
+target.dirs=Classes/MyObjcModule:Classes/OtherObjcModule:Classes/SubdirsInModule/*
 # Exclude directories separated by ":", relative to {root.dir}
 exclude.dirs=Resources/Fonts:Resources/Images.xcassets
 # Exclude `#import` headers, comma separated

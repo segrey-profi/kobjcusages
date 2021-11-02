@@ -1,6 +1,11 @@
+import java.io.File
 import java.util.Properties
 
 class Config(properties: Properties) {
+
+    private companion object {
+        private const val PARENT_SUFFIX = "/*"
+    }
 
     enum class Mode {
         CODE, IMAGES
@@ -16,6 +21,7 @@ class Config(properties: Properties) {
     val targetPaths: List<String> = properties
         .getList("target.dirs")
         .takeIf { it.isNotEmpty() }
+        ?.checkingParents(rootPath)
         ?.sorted()
         ?: error("No target directories provided")
 
@@ -31,4 +37,20 @@ class Config(properties: Properties) {
             ?.filter { it.isNotBlank() }
             ?.map { it.trim() } ?: emptyList()
 
+    private fun List<String>.checkingParents(rootPath: String): List<String> {
+        if (none { it.endsWith(PARENT_SUFFIX) }) return this
+        val paths = mutableListOf<String>()
+        val root = File(rootPath)
+        for (path in this) {
+            if (path.endsWith(PARENT_SUFFIX)) {
+                File(root, path.removeSuffix(PARENT_SUFFIX))
+                    .takeIf { it.isDirectory }
+                    ?.listFiles { file, _ -> file?.isDirectory ?: false }
+                    ?.forEach { paths.add(it.toRelativeString(root)) }
+            } else {
+                paths.add(path)
+            }
+        }
+        return paths
+    }
 }
